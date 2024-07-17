@@ -19,7 +19,7 @@ jobs:
       - name: Check Docker image existence in Container Registry
         run: |
           IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri_infra:${{ github.event.inputs.version }}_latest"
-          if docker pull $IMAGE; then
+          if sudo docker pull $IMAGE; then
             echo "Docker image $IMAGE found."
           else
             echo "Error: Docker image $IMAGE not found."
