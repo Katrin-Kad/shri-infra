@@ -24,7 +24,7 @@ jobs:
           docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_latest
           docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_latest
     - name: Update GitHub issue
-      uses: JasonEtco/create-an-issue@v4
+      uses: JasonEtco/create-an-issue@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
