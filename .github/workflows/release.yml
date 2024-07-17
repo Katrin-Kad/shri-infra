@@ -37,7 +37,7 @@ jobs:
         draft: false
         prerelease: false
     - name: Create GitHub issue
-      uses: JasonEtco/create-an-issue@v2
+      uses: JasonEtco/create-an-issue@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
