@@ -12,24 +12,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
-    - name: Deploy to VM
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VM_IP }}
-        username: ${{ secrets.VM_USER }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        script: |
-          docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
-          docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
-    - name: Update GitHub issue
-      uses: JasonEtco/create-an-issue@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: Deploy ${{ github.event.inputs.version }}
-        body: |
-          - Date: ${{ github.event.date }}
-          - Author: ${{ github.actor }}
-          - Version: ${{ github.event.inputs.version }}
-          - Deployed to: ${{ secrets.VM_IP }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Login to Yandex Container Registry
+        run: echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
+      - name: Check Docker image existence in Container Registry
+        run: |
+          IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri_infra:${{ github.event.inputs.release_version }}_latest"
+          if docker pull $IMAGE; then
+            echo "Docker image $IMAGE found."
+          else
+            echo "Error: Docker image $IMAGE not found."
+            exit 1
+          fi
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
+            docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
+      - name: Update GitHub issue
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: Deploy ${{ github.event.inputs.version }}
+          body: |
+            - Date: ${{ github.event.date }}
+            - Author: ${{ github.actor }}
+            - Version: ${{ github.event.inputs.version }}
+            - Deployed to: ${{ secrets.VM_IP }}
