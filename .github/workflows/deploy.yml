@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Login to Yandex Container Registry
-        run: echo ${{ secrets.YC_REGISTRY_TOKEN }} | sudo docker login --username oauth --password-stdin cr.yandex
+        run: sudo echo ${{ secrets.YC_REGISTRY_TOKEN }} | sudo docker login --username oauth --password-stdin cr.yandex
       - name: Check Docker image existence in Container Registry
         run: |
           IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri_infra:${{ github.event.inputs.version }}_latest"
@@ -32,8 +32,8 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
-            docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
+            sudo docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
+            sudo docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
       - name: Update GitHub issue
         uses: JasonEtco/create-an-issue@v2
         env:
