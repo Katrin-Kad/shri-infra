@@ -1,55 +1,54 @@
-name: Deploy
+name: Deploy to Production
 
 on:
   workflow_dispatch:
     inputs:
-      version:
+      release_version:
         description: 'Version of the release'
         required: true
-        default: '1.0.0'
+        default: 'latest'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-      - name: Login to Yandex Cloud Container Registry
-        env:
-          YC_REGISTRY_TOKEN: ${{ secrets.YC_REGISTRY_TOKEN }}
-        run: echo "${{ secrets.YC_REGISTRY_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+    - name: Login to Yandex Cloud Container Registry
+      env:
+        YC_REGISTRY_TOKEN: ${{ secrets.YC_REGISTRY_TOKEN }}
+      run: echo "${{ secrets.YC_REGISTRY_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
 
-      - name: Check if Docker image exists
-        id: image_check
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-          if ! docker manifest inspect cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${VERSION}_latest; then
-            echo "Docker image with version ${VERSION}_latest does not exist."
-            exit 1
-          fi
+    - name: Check if Docker image exists
+      id: check_image
+      run: |
+        IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.release_version }}_latest"
+        if ! docker manifest inspect $IMAGE > /dev/null; then
+          echo "Image $IMAGE does not exist"
+          exit 1
+        fi
 
-      - name: Deploy to VM
-        env:
-          VM_IP: ${{ secrets.VM_IP }}
-          VM_USER: ${{ secrets.VM_USER }}
-          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-          ssh -i $VM_SSH_KEY -o StrictHostKeyChecking=no $VM_USER@$VM_IP << EOF
-            docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${VERSION}_latest
-            docker run -d -p 80:80 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${VERSION}_latest
-          EOF
+    - name: Deploy to VM
+      if: success()
+      env:
+        VM_IP: ${{ secrets.VM_IP }}
+        VM_USER: ${{ secrets.VM_USER }}
+        VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+      run: |
+        IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.release_version }}_latest"
+        ssh -o StrictHostKeyChecking=no -i $VM_SSH_KEY $VM_USER@$VM_IP "docker pull $IMAGE && docker run -d -p 80:80 $IMAGE"
 
-      - name: Add comment to issue
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: 1 # Replace with your issue number
-          body: |
-            Release ${{ github.event.inputs.version }} has been deployed to production.
-            Date: ${{ steps.current_date.outputs.date }}
-            Deployed by: ${{ github.actor }}
+    - name: Add comment to issue
+      if: success()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        DATE=$(date)
+        curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+          -d "{\"body\": \"Релиз выкачен в прод c датой $DATE пользователем $GITHUB_ACTOR\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.inputs.issue_number }}/comments"
