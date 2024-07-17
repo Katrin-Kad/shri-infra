@@ -3,7 +3,7 @@ name: Общий шаблон задачи
 about: Опишите задачу
 title: '[ЗАМЕНИТЬ НАЗВАНИЕ ЗАДАЧИ]'
 labels: [bug, enhancement]
-assignees: [ваше_имя]
+assignees: Katrin-Kad
 ---
 
 ## Описание задачи
