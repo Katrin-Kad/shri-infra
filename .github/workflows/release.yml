@@ -17,13 +17,13 @@ jobs:
     - run: npm run lint
     - run: npm test
     - name: Build Docker image
-      run: docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }} .
+      run: sudo docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }} .
     - name: Push Docker image
       run: |
-        echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
-        docker tag cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }}_latest
-        docker push cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }}
-        docker push cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }}_latest
+        sudo echo ${{ secrets.YC_REGISTRY_TOKEN }} | sudo docker login --username oauth --password-stdin cr.yandex
+        sudo docker tag cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }}_latest
+        sudo docker push cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }}
+        sudo docker push cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.run_number }}_latest
     - name: Create GitHub release
       uses: actions/create-release@v1
       env:
