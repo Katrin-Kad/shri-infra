@@ -20,11 +20,11 @@ jobs:
         run: echo "${{ secrets.YC_REGISTRY_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
 
       - name: Verify Docker image
-        run: docker manifest inspect cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.ref_name }}
+        run: docker manifest inspect cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}
 
       - name: Deploy to Production
         run: |
-          ssh -i ${{ secrets.VM_SSH_KEY }} ${{ secrets.VM_USER }}@${{ secrets.VM_IP }} "docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.ref_name }} && docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.ref_name }}"
+          ssh -i ${{ secrets.VM_SSH_KEY }} ${{ secrets.VM_USER }}@${{ secrets.VM_IP }} "docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }} && docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}"
 
       - name: Add release comment to Issue
         uses: actions/github-script@v5
