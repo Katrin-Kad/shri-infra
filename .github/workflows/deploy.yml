@@ -1,54 +1,38 @@
-name: Deploy to Production
+name: Deploy
 
 on:
-  workflow_dispatch:
-    inputs:
-      release_version:
-        description: 'Version of the release'
-        required: true
-        default: 'latest'
+  push:
+    branches:
+      - releases/*
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-    - name: Login to Yandex Cloud Container Registry
-      env:
-        YC_REGISTRY_TOKEN: ${{ secrets.YC_REGISTRY_TOKEN }}
-      run: echo "${{ secrets.YC_REGISTRY_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+      - name: Login to Yandex Cloud Container Registry
+        run: echo "${{ secrets.YC_REGISTRY_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
 
-    - name: Check if Docker image exists
-      id: check_image
-      run: |
-        IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.release_version }}_latest"
-        if ! docker manifest inspect $IMAGE > /dev/null; then
-          echo "Image $IMAGE does not exist"
-          exit 1
-        fi
+      - name: Verify Docker image
+        run: docker manifest inspect cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.ref_name }}
 
-    - name: Deploy to VM
-      if: success()
-      env:
-        VM_IP: ${{ secrets.VM_IP }}
-        VM_USER: ${{ secrets.VM_USER }}
-        VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
-      run: |
-        IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.release_version }}_latest"
-        ssh -o StrictHostKeyChecking=no -i $VM_SSH_KEY $VM_USER@$VM_IP "docker pull $IMAGE && docker run -d -p 80:80 $IMAGE"
+      - name: Deploy to Production
+        run: |
+          ssh -i ${{ secrets.VM_SSH_KEY }} ${{ secrets.VM_USER }}@${{ secrets.VM_IP }} "docker pull cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.ref_name }} && docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.ref_name }}"
 
-    - name: Add comment to issue
-      if: success()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        DATE=$(date)
-        curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
-          -d "{\"body\": \"Релиз выкачен в прод c датой $DATE пользователем $GITHUB_ACTOR\"}" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.inputs.issue_number }}/comments"
+      - name: Add release comment to Issue
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const { ref, head_commit } = context.payload;
+            const { login } = await github.users.getByUsername({ username: context.actor });
+            const body = `Release ${ref} deployed to production by ${login} at ${new Date().toISOString()}`;
+            await github.issues.createComment({ owner, repo, issue_number: context.issue.number, body });
