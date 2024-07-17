@@ -31,7 +31,7 @@ jobs:
         docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }}
         docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_latest
     - name: Update GitHub issue
-      uses: JasonEtco/create-an-issue@v4
+      uses: JasonEtco/create-an-issue@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
