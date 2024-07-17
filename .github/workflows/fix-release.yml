@@ -27,7 +27,7 @@ jobs:
     - name: Push Docker image
       run: |
         echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
-        docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }} cr.yandex/<идентификатор_реестра}/app:${{ github.event.inputs.version }}_latest
+        docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_latest
         docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }}
         docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_latest
     - name: Update GitHub issue
