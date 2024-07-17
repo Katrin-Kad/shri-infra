@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Login to Yandex Container Registry
-        run: echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
+        run: echo ${{ secrets.YC_REGISTRY_TOKEN }} | sudo docker login --username oauth --password-stdin cr.yandex
       - name: Check Docker image existence in Container Registry
         run: |
           IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/shri_infra:${{ github.event.inputs.version }}_latest"
