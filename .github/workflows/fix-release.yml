@@ -1,0 +1,44 @@
+name: Fix Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to fix'
+        required: true
+
+jobs:
+  fix-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: releases/${{ github.event.inputs.version }}
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+    - run: npm ci
+    - run: npm run lint
+    - run: npm test
+    - name: Build Docker image
+      run: docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }} .
+    - name: Push Docker image
+      run: |
+        echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
+        docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }} cr.yandex/<идентификатор_реестра}/app:${{ github.event.inputs.version }}_latest
+        docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }}
+        docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_latest
+    - name: Update GitHub issue
+      uses: JasonEtco/create-an-issue@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        title: Fix Release ${{ github.event.inputs.version }}
+        body: |
+          - Date: ${{ github.event.date }}
+          - Author: ${{ github.actor }}
+          - Version: ${{ github.event.inputs.version }}_fix${{ github.run_number }}
+          - Commits: ${{ github.sha }}
+          - Docker image: cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.version }}_fix${{ github.run_number }}

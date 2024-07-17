@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+    - run: npm ci
+    - run: npm run lint
+    - run: npm test
+    - name: Build Docker image
+      run: docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }} .
+    - name: Push Docker image
+      run: |
+        echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
+        docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}_latest
+        docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}
+        docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}_latest
+    - name: Create GitHub release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.run_number }}
+        release_name: Release ${{ github.run_number }}
+        body: |
+          Release ${{ github.run_number }}
+          - Docker image: cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}
+        draft: false
+        prerelease: false
+    - name: Create GitHub issue
+      uses: JasonEtco/create-an-issue@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        title: Release ${{ github.run_number }}
+        body: |
+          - Date: ${{ github.event.date }}
+          - Author: ${{ github.actor }}
+          - Version: ${{ github.run_number }}
+          - Commits: ${{ github.sha }}
+          - Docker image: cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}
