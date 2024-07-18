@@ -60,7 +60,7 @@ jobs:
             
             # Pull and run the new container
             docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
-            docker run -d -p 3000:3000 --name shri-infra cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
+            docker run -d -p 3000:3000 cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
             
             # Wait for the container to start
             sleep 10
