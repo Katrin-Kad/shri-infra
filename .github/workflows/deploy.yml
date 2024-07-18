@@ -20,7 +20,7 @@ jobs:
 
       - name: Check Docker image existence in Container Registry
         run: |
-          IMAGE="cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest"
+          IMAGE="cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest"
           if docker pull $IMAGE; then
             echo "Docker image $IMAGE found."
           else
@@ -59,8 +59,8 @@ jobs:
             fi  
             
             # Pull and run the new container
-            docker pull cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest
-            docker run -d -p 3000:3000 --name shri-infra cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest
+            docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
+            docker run -d -p 3000:3000 --name shri-infra cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
             
             # Wait for the container to start
             sleep 10

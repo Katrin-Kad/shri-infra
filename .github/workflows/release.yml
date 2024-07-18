@@ -46,8 +46,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t cr.yandex/crp6noc3f61saaotgjop/app:${{ github.run_number }} .
-          docker tag cr.yandex/crp6noc3f61saaotgjop/app:${{ github.run_number }} cr.yandex/crp6noc3f61saaotgjop/app:${{ github.run_number }}_latest
+          docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }} .
+          docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}_latest
 
       - name: Verify files copied to Docker context
         run: ls -la
@@ -58,8 +58,8 @@ jobs:
       - name: Push Docker image to Container Registry
         run: |
           echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
-          docker push cr.yandex/crp6noc3f61saaotgjop/app:${{ github.run_number }}
-          docker push cr.yandex/crp6noc3f61saaotgjop/app:${{ github.run_number }}_latest
+          docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}
+          docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}_latest
 
       - name: Create release branch
         env:
@@ -85,7 +85,7 @@ jobs:
           echo "Список коммитов от предыдущего релизного (или фиксрелизного) тега:" >> issue.txt
           git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0)..HEAD >> issue.txt
           echo "Ссылка на docker-образ в Yandex Container Registry:" >> issue.txt
-          echo "cr.yandex/crp6noc3f61saaotgjop/app:${{ github.run_number }}" >> issue.txt
+          echo "cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}" >> issue.txt
           gh issue create --title "Релиз ${{ github.run_number }}" --body-file issue.txt
 
       - name: Update CHANGELOG.md

@@ -47,14 +47,14 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} .
-          docker tag cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest
+          docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} .
+          docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
 
       - name: Push Docker image to Container Registry
         run: |
           echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
-          docker push cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker push cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest
+          docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker push cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
 
       - name: Create hotfix tag
         env:
@@ -76,5 +76,5 @@ jobs:
           echo "Список коммитов от предыдущего релизного (или фиксрелизного) тега:" >> comment.txt
           git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0)..HEAD >> comment.txt
           echo "Ссылка на docker-образ в Yandex Container Registry:" >> comment.txt
-          echo "cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}" >> comment.txt
+          echo "cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}" >> comment.txt
           gh issue comment $(gh issue list --search "Релиз ${{ github.event.inputs.release_version }}" --json number --jq '.[0].number') --body-file comment.txt
