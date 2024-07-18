@@ -1,44 +1,80 @@
-name: Fix Release
+name: Fix release
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to fix'
+      release_version:
+        description: 'Release version'
         required: true
 
 jobs:
-  fix-release:
+  lint-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: releases/${{ github.event.inputs.version }}
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - run: npm ci
-    - run: npm run lint
-    - run: npm test
-    - name: Build Docker image
-      run: docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}_fix${{ github.run_number }} .
-    - name: Push Docker image
-      run: |
-        echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
-        docker tag cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}_fix${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}_latest
-        docker push cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}_fix${{ github.run_number }}
-        docker push cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}_latest
-    - name: Update GitHub issue
-      uses: JasonEtco/create-an-issue@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: Fix Release ${{ github.event.inputs.version }}
-        body: |
-          - Date: ${{ github.event.date }}
-          - Author: ${{ github.actor }}
-          - Version: ${{ github.event.inputs.version }}_fix${{ github.run_number }}
-          - Commits: ${{ github.sha }}
-          - Docker image: cr.yandex/crp7jeuq66rvk2nacuqp/shri-infra:${{ github.event.inputs.version }}_fix${{ github.run_number }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.15.1'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
+  hotfix:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.15.1'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Docker image
+        run: |
+          docker build -t cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} .
+          docker tag cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest
+
+      - name: Push Docker image to Container Registry
+        run: |
+          echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
+          docker push cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker push cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_latest
+
+      - name: Create hotfix tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git fetch origin # Обновление локального состояния репозитория
+          git checkout releases/${{ github.event.inputs.release_version }}
+          git tag -a v${{ github.event.inputs.release_version }}_fix${{ github.run_number }} -m "Hotfix version ${{ github.event.inputs.release_version }}_fix${{ github.run_number }}"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git v${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+
+      - name: Comment on GitHub Issue for hotfix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Дата: $(date)" >> comment.txt
+          echo "Автор фикса: $GITHUB_ACTOR" >> comment.txt
+          echo "Список коммитов от предыдущего релизного (или фиксрелизного) тега:" >> comment.txt
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0)..HEAD >> comment.txt
+          echo "Ссылка на docker-образ в Yandex Container Registry:" >> comment.txt
+          echo "cr.yandex/crp6noc3f61saaotgjop/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}" >> comment.txt
+          gh issue comment $(gh issue list --search "Релиз ${{ github.event.inputs.release_version }}" --json number --jq '.[0].number') --body-file comment.txt
