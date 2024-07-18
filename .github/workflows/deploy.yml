@@ -59,17 +59,17 @@ jobs:
             fi  
             
             # Pull and run the new container
-            docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
+            sudo docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
             sudo docker run -d -p 3000:3000 --name shri-infra cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
             
             # Wait for the container to start
             sleep 10
             
             # Check container logs
-            docker logs shri-infra
+            sudo docker logs shri-infra
             
             # Check running containers
-            docker ps
+            sudo docker ps
           EOF
 
       - name: Comment on GitHub Issue about deployment
