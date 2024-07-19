@@ -68,5 +68,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$(date) релиз ${{ github.event.inputs.release_version }} успешно выкачен в прод пользователем $GITHUB_ACTOR." > comment.txt
+          echo "Релиз ${{ github.event.inputs.release_version }} успешно выкачен в прод на $(date) пользователем $GITHUB_ACTOR." > comment.txt
           gh issue comment $(gh issue list --search "Релиз ${{ github.event.inputs.release_version }}" --json number --jq '.[0].number') --body-file comment.txt
