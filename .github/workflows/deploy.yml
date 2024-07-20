@@ -57,10 +57,6 @@ jobs:
             sudo docker run -d -p 3000:3000 --name shri-infra cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
             
             sleep 10
-            
-            sudo docker logs shri-infra
-            
-            sudo docker ps
           EOF
 
       - name: Comment on GitHub Issue 
