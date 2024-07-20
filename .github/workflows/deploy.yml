@@ -30,10 +30,10 @@ jobs:
 
       - name: Check if some container is running
         run: |
-          CONTAINER_ID=$(docker ps -aqf "name=shri-infra")
-          if [ -n "$CONTAINER_ID" ]; then
-            docker stop $CONTAINER_ID
-            docker rm $CONTAINER_ID
+          CONTAINER=$(docker ps -aqf "name=shri-infra")
+          if [ -n "$CONTAINER" ]; then
+            docker stop $CONTAINER
+            docker rm $CONTAINER
           fi  
 
       - name: Deploy to server
@@ -46,27 +46,21 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/keys
           chmod 600 ~/.ssh/keys
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/keys ${{ secrets.VM_USER }}@${{ secrets.VM_IP }} << 'EOF'
-            CONTAINER_ID=$(docker ps -aqf "name=shri-infra")
-            if [ -n "$CONTAINER_ID" ]; then
-              docker stop $CONTAINER_ID
-              docker rm $CONTAINER_ID
+            CONTAINER=$(docker ps -aqf "name=shri-infra")
+            if [ -n "$CONTAINER" ]; then
+              docker stop $CONTAINER
+              docker rm $CONTAINER
             else
-              echo "No existing container with name shri-infra found."
+              echo "This container does not exist yet."
             fi  
             
             sudo docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
             sudo docker run -d -p 3000:3000 --name shri-infra cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest
-            
-            sleep 10
-            
-            sudo docker logs shri-infra
-            
-            sudo docker ps
           EOF
 
-      - name: Comment on GitHub Issue
+      - name: Comment on GitHub Issue 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Релиз ${{ github.event.inputs.release_version }} успешно выкачен в прод на $(date) пользователем $GITHUB_ACTOR." > comment.txt
+          echo "$(date) релиз ${{ github.event.inputs.release_version }} выкачен в прод пользователем $GITHUB_ACTOR." > comment.txt
           gh issue comment $(gh issue list --search "Релиз ${{ github.event.inputs.release_version }}" --json number --jq '.[0].number') --body-file comment.txt
