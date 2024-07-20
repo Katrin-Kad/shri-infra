@@ -4,56 +4,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint-and-test:
+  Check-up:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '20.15.1'
+          node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test
+      - run: npm install
+      - run: npm run lint
+      - run: npm run test
 
   release:
-    needs: lint-and-test
+    needs: Check-up
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
-          node-version: '20.15.1'
+          node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
+      - run: npm install
+      - run: npm run build
 
       - name: Build Docker image
         run: |
           docker build -t cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }} .
           docker tag cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }} cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.run_number }}_latest
-
-      - name: Verify files copied to Docker context
-        run: ls -la
-
-      - name: Verify Docker image
-        run: docker images
 
       - name: Push Docker image to Container Registry
         run: |

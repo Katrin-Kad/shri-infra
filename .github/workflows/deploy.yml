@@ -12,8 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Login to Yandex Container Registry
         run: echo ${{ secrets.YC_REGISTRY_TOKEN }} | docker login --username oauth --password-stdin cr.yandex
@@ -23,7 +22,7 @@ jobs:
           if docker pull cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest; then
             echo "Docker image cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest found."
           else
-            echo "Error: Docker image cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest not found."
+            echo "Docker image cr.yandex/crp7jeuq66rvk2nacuqp/app:${{ github.event.inputs.release_version }}_latest not found."
             exit 1
           fi
 
@@ -46,7 +45,7 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/keys
           chmod 600 ~/.ssh/keys
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/keys ${{ secrets.VM_USER }}@${{ secrets.VM_IP }} << 'EOF'
-            CONTAINER=$(docker ps -aqf "name=shri-infra")
+            CONTAINER=$(docker ps -aqf "name=/shri-infra")
             if [ -n "$CONTAINER" ]; then
               docker stop $CONTAINER
               docker rm $CONTAINER
