@@ -8,42 +8,32 @@ on:
         required: true
 
 jobs:
-  lint-and-test:
+  Check-up:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
-          node-version: '20.15.1'
+          node-version: '20.x'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test
+      - run: npm install
+      - run: npm run lint
+      - run: npm run test
 
   hotfix:
-    needs: lint-and-test
+    needs: Check-up
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
-          node-version: '20.15.1'
+          node-version: '20.x'
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
 
       - name: Build Docker image
         run: |
@@ -62,7 +52,7 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git fetch origin # Обновление локального состояния репозитория
+          git fetch origin 
           git checkout releases/${{ github.event.inputs.release_version }}
           git tag -a v${{ github.event.inputs.release_version }}_fix${{ github.run_number }} -m "Hotfix version ${{ github.event.inputs.release_version }}_fix${{ github.run_number }}"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git v${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
