@@ -6,6 +6,6 @@ describe('About', () => {
     it('Should render author name', () => {
         const { container } = render(<About />);
 
-        expect(container.textContent).toBe('AboutAuthor: Kadushkina Ekaterina Проверяющий: Lu Agulova');
+        expect(container.textContent).toBe('AboutAuthor: Kadushkina Ekaterina Reviewer: Lu Agulova');
     });
 });
